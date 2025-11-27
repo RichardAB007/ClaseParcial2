@@ -1,0 +1,1066 @@
+================================================================================
+Integrantes: Palma Richard, Lara Miguel, Cedeño Gregory
+================================================================================
+
+
+
+================================================================================
+                    DOCUMENTACION TECNICA COMPLETA
+              SISTEMA DE GESTION DE INVENTARIO AVANZADO
+                        TecnoLogix Global
+                   Versión con Interfaz Grafica (GUI)
+================================================================================
+
+                         INDICE DE CONTENIDOS
+
+1.  INFORMACION GENERAL DEL PROGRAMA
+2.  LIBRERIA UTILIZADA - JOPTIONPANE
+3.  ESTRUCTURA DEL PROGRAMA
+4.  DECLARACION DE VARIABLES
+5.  CONSTANTES DE IMPUESTOS
+6.  ESTRUCTURAS DE DATOS (ARRAYS)
+7.  VALIDACIONES IMPLEMENTADAS
+8.  CICLOS UTILIZADOS
+9.  CONDICIONALES UTILIZADOS
+10. CALCULO DE IMPUESTOS
+11. ALGORITMO DE ORDENAMIENTO (BURBUJA)
+12. METODOS DE JOPTIONPANE UTILIZADOS
+13. FLUJO COMPLETO DEL PROGRAMA
+14. REPORTES GENERADOS
+15. FORMATO DE SALIDA
+
+================================================================================
+1. INFORMACION GENERAL DEL PROGRAMA
+================================================================================
+
+Nombre del Archivo:    SistemaInventarioGUI.java
+Nombre de la Clase:    SistemaInventarioGUI
+Tipo de Aplicacion:    Aplicacion de escritorio con interfaz grafica
+Libreria Principal:    javax.swing.JOptionPane
+
+PROPOSITO:
+El programa gestiona el inventario de productos tecnologicos para la empresa
+TecnoLogix Global. Permite registrar productos, calcular impuestos diferenciados,
+aplicar tasas especiales segun el dia de operacion y generar reportes detallados
+con rankings de productos.
+
+CARACTERISTICAS PRINCIPALES:
+- Interfaz grafica mediante ventanas emergentes (dialogs)
+- Validacion completa de datos de entrada
+- Calculo automatico de 4 tipos de impuestos
+- Generacion de rankings por precio y stock
+- Reportes finales en ventanas encadenadas
+
+================================================================================
+2. LIBRERIA UTILIZADA - JOPTIONPANE
+================================================================================
+
+IMPORTACION:
+    import javax.swing.JOptionPane;
+
+DESCRIPCION:
+JOptionPane es una clase de la biblioteca Swing de Java que proporciona metodos
+estaticos para crear cuadros de dialogo estandar. Permite mostrar mensajes,
+solicitar entrada de datos y obtener confirmaciones del usuario de manera
+visual e interactiva.
+
+VENTAJAS DE USAR JOPTIONPANE:
+- No requiere configuracion adicional (viene incluida en el JDK)
+- Interfaz amigable para el usuario
+- Facil implementacion con metodos estaticos
+- Compatible con cualquier sistema operativo que soporte Java
+- Permite diferentes tipos de dialogos (informacion, error, pregunta, etc.)
+
+================================================================================
+3. ESTRUCTURA DEL PROGRAMA
+================================================================================
+
+El programa sigue una estructura secuencial organizada en las siguientes
+secciones principales:
+
+    1. DECLARACION DE VARIABLES
+       - Variables de configuracion
+       - Variables de totales/acumuladores
+       - Contadores por categoria
+       - Variables para producto destacado
+       - Constantes de tasas de impuestos
+       - Arrays para almacenar datos de productos
+    
+    2. MENSAJE DE BIENVENIDA
+       - Ventana informativa inicial
+    
+    3. CONFIGURACION INICIAL DEL DIA
+       - Solicitar limite de productos
+       - Solicitar dia de operacion
+       - Determinar si aplica TCE
+    
+    4. CICLO PRINCIPAL DE REGISTRO
+       - Captura de datos del producto
+       - Validacion de cada campo
+       - Calculo de impuestos
+       - Acumulacion de totales
+       - Almacenamiento en arrays
+       - Reporte individual del producto
+    
+    5. PROCESAMIENTO FINAL
+       - Determinacion de categoria con mas productos
+       - Ordenamiento de productos para rankings
+    
+    6. GENERACION DE REPORTES
+       - Reporte financiero
+       - Reporte de estadisticas
+       - Ranking por precio final
+       - Ranking por stock
+       - Mensaje de despedida
+
+================================================================================
+4. DECLARACION DE VARIABLES
+================================================================================
+
+El programa utiliza unicamente dos tipos de datos primitivos segun los
+requerimientos: int (enteros) y float (decimales).
+
+--- VARIABLES DE CONFIGURACION ---
+
+    int limiteProductos = 0;
+    
+    PROPOSITO: Almacena el numero maximo de productos que se pueden
+               registrar en el dia.
+    TIPO: int (entero)
+    VALOR INICIAL: 0
+    VALIDACION: Debe ser mayor a 0
+
+    -------------------------------------------------------------------------
+
+    int diaOperacion = 0;
+    
+    PROPOSITO: Almacena el dia de la semana seleccionado (1-7)
+    TIPO: int (entero)
+    VALORES VALIDOS: 1=Lunes, 2=Martes, 3=Miercoles, 4=Jueves,
+                     5=Viernes, 6=Sabado, 7=Domingo
+    IMPORTANCIA: Determina si se aplica la TCE (Tasa de Control Especial)
+
+    -------------------------------------------------------------------------
+
+    int productosRegistrados = 0;
+    
+    PROPOSITO: Contador de productos ingresados exitosamente
+    TIPO: int (entero)
+    USO: Controla el limite diario y sirve como indice para los arrays
+
+--- VARIABLES DE TOTALES (ACUMULADORES) ---
+
+    float totalIVA = 0;
+    float totalIMC = 0;
+    float totalIRT = 0;
+    float totalTCE = 0;
+    float montoTotalVentas = 0;
+    
+    PROPOSITO: Acumulan los valores de cada impuesto y el monto total
+               considerando el stock de cada producto
+    TIPO: float (decimal)
+    FORMULA DE ACUMULACION: totalImpuesto = totalImpuesto + (impuesto * stock)
+
+--- CONTADORES POR CATEGORIA ---
+
+    int contadorCat1 = 0;    // Electronica personal
+    int contadorCat2 = 0;    // Componentes de computo
+    int contadorCat3 = 0;    // Accesorios
+    int contadorCat4 = 0;    // Redes y telecomunicaciones
+    
+    PROPOSITO: Cuentan cuantos productos hay en cada categoria
+    USO: Determinan cual categoria tiene mas productos registrados
+
+--- VARIABLES PARA PRODUCTO DESTACADO ---
+
+    String nombreProductoMayorPrecio = "";
+    float mayorPrecioFinal = 0;
+    
+    PROPOSITO: Almacenan el nombre y precio del producto mas caro
+    ACTUALIZACION: Se actualizan cada vez que se encuentra un producto
+                   con precio final mayor al registrado
+
+--- VARIABLES AUXILIARES ---
+
+    int entradaValida = 0;
+    
+    PROPOSITO: Bandera para controlar los ciclos de validacion
+    VALORES: 0 = entrada invalida (continuar pidiendo)
+             1 = entrada valida (salir del ciclo)
+
+    -------------------------------------------------------------------------
+
+    int continuar = 1;
+    
+    PROPOSITO: Controla si el usuario desea seguir registrando productos
+    VALORES: 1 = continuar registrando
+             0 = terminar registro
+
+    -------------------------------------------------------------------------
+
+    int aplicaTCE = 0;
+    
+    PROPOSITO: Indica si el dia actual aplica Tasa de Control Especial
+    VALORES: 0 = no aplica (dias 1-5)
+             1 = aplica (dias 6 y 7)
+
+================================================================================
+5. CONSTANTES DE IMPUESTOS
+================================================================================
+
+    float TASA_IVA = 0.12f;     // 12%
+    float TASA_IMC = 0.015f;    // 1.5%
+    float TASA_IRT = 0.037f;    // 3.7%
+    float TASA_TCE = 0.02f;     // 2%
+
+DESCRIPCION DE CADA IMPUESTO:
+
+    IVA (Impuesto al Valor Agregado) - 12%
+    APLICACION: Todas las categorias EXCEPTO categoria 3 (Accesorios)
+    FORMULA: iva = precioBase * 0.12
+
+    -------------------------------------------------------------------------
+
+    IMC (Impuesto Municipal de Comercio) - 1.5%
+    APLICACION: TODOS los productos sin excepcion
+    FORMULA: imc = precioBase * 0.015
+
+    -------------------------------------------------------------------------
+
+    IRT (Impuesto de Riesgo Tecnologico) - 3.7%
+    APLICACION: Solo productos con riesgo tecnologico (riesgo = 1)
+    FORMULA: irt = precioBase * 0.037 (si riesgo = 1)
+             irt = 0 (si riesgo = 0)
+
+    -------------------------------------------------------------------------
+
+    TCE (Tasa de Control Especial) - 2%
+    APLICACION: Solo si el dia de operacion es Sabado (6) o Domingo (7)
+    FORMULA: tce = precioBase * 0.02 (si dia = 6 o dia = 7)
+             tce = 0 (caso contrario)
+
+NOTA SOBRE EL SUFIJO 'f':
+    El sufijo 'f' al final de los numeros decimales (ej: 0.12f) indica
+    a Java que el literal es de tipo float. Sin este sufijo, Java
+    interpreta los decimales como double por defecto.
+
+================================================================================
+6. ESTRUCTURAS DE DATOS (ARRAYS)
+================================================================================
+
+Se utilizan arrays (arreglos) para almacenar los datos de todos los productos
+registrados, permitiendo generar los rankings al final del programa.
+
+    int MAX_PRODUCTOS = 100;
+    
+    PROPOSITO: Define el tamano maximo de los arrays
+    VALOR: 100 (soporta hasta 100 productos)
+
+    -------------------------------------------------------------------------
+
+    String[] nombresProductos = new String[MAX_PRODUCTOS];
+    
+    TIPO: Array de cadenas de texto
+    CONTENIDO: Nombres de cada producto registrado
+    INDICE: Se accede mediante productosRegistrados
+
+    -------------------------------------------------------------------------
+
+    float[] preciosFinales = new float[MAX_PRODUCTOS];
+    
+    TIPO: Array de numeros decimales
+    CONTENIDO: Precio final (con todos los impuestos) de cada producto
+    USO PRINCIPAL: Generar ranking por precio
+
+    -------------------------------------------------------------------------
+
+    int[] stocksProductos = new int[MAX_PRODUCTOS];
+    
+    TIPO: Array de numeros enteros
+    CONTENIDO: Cantidad de stock ingresado para cada producto
+    USO PRINCIPAL: Generar ranking por stock
+
+COMO SE ALMACENAN LOS DATOS:
+    nombresProductos[productosRegistrados] = nombreProducto;
+    preciosFinales[productosRegistrados] = precioFinal;
+    stocksProductos[productosRegistrados] = stock;
+
+    El indice 'productosRegistrados' se incrementa despues de cada
+    registro exitoso, asegurando que cada producto ocupe una posicion
+    unica en los arrays.
+
+================================================================================
+7. VALIDACIONES IMPLEMENTADAS
+================================================================================
+
+El programa implementa validaciones robustas para garantizar la integridad
+de los datos. Cada validacion utiliza un ciclo while que repite la solicitud
+hasta obtener un valor valido.
+
+--- VALIDACION DEL LIMITE DE PRODUCTOS ---
+
+    CONDICION: limiteProductos > 0
+    ERROR: "El limite debe ser mayor a 0"
+    IMPLEMENTACION:
+        while (entradaValida == 0) {
+            // Solicitar entrada
+            try {
+                limiteProductos = Integer.parseInt(inputLimite);
+                if (limiteProductos > 0) {
+                    entradaValida = 1;  // Salir del ciclo
+                } else {
+                    // Mostrar error y repetir
+                }
+            } catch (NumberFormatException e) {
+                // Mostrar error de formato
+            }
+        }
+
+--- VALIDACION DEL DIA DE OPERACION ---
+
+    CONDICION: diaOperacion >= 1 && diaOperacion <= 7
+    ERROR: "Ingrese un valor entre 1 y 7"
+    VALORES ACEPTADOS: 1, 2, 3, 4, 5, 6, 7
+
+--- VALIDACION DEL PRECIO BASE ---
+
+    CONDICION: precioBase > 0
+    ERROR: "El precio debe ser mayor a 0"
+    TIPO DE CONVERSION: Float.parseFloat()
+
+--- VALIDACION DE LA CATEGORIA ---
+
+    CONDICION: categoria >= 1 && categoria <= 4
+    ERROR: "Ingrese un valor entre 1 y 4"
+    VALORES ACEPTADOS: 1, 2, 3, 4
+
+--- VALIDACION DEL RIESGO TECNOLOGICO ---
+
+    CONDICION: riesgo == 0 || riesgo == 1
+    ERROR: "Ingrese 0 o 1"
+    VALORES ACEPTADOS: 0 (No), 1 (Si)
+
+--- VALIDACION DEL STOCK ---
+
+    CONDICION: stock >= 1
+    ERROR: "El stock debe ser minimo 1"
+    MINIMO ACEPTADO: 1 unidad
+
+--- VALIDACION DEL LIMITE DIARIO ---
+
+    CONDICION: productosRegistrados < limiteProductos
+    COMPORTAMIENTO: Cuando se alcanza el limite, el programa muestra
+                    un mensaje y finaliza automaticamente el registro
+
+--- MANEJO DE CANCELACION ---
+
+    CONDICION: inputVariable == null
+    COMPORTAMIENTO: Si el usuario cierra la ventana o presiona Cancelar,
+                    el programa muestra "Operacion cancelada" y termina
+                    (return;)
+
+================================================================================
+8. CICLOS UTILIZADOS
+================================================================================
+
+El programa utiliza tres tipos de ciclos segun los requerimientos:
+
+--- CICLO WHILE ---
+
+USO 1: Validacion de entradas
+    
+    entradaValida = 0;
+    while (entradaValida == 0) {
+        // Solicitar dato
+        // Validar dato
+        if (datoEsValido) {
+            entradaValida = 1;  // Salir del ciclo
+        } else {
+            // Mostrar error (se repite el ciclo)
+        }
+    }
+    
+    EXPLICACION: El ciclo continua mientras la entrada sea invalida.
+                 La variable 'entradaValida' actua como bandera de control.
+                 Solo cuando el dato cumple las condiciones, se cambia
+                 a 1 y el ciclo termina.
+
+USO 2: Registro principal de productos
+    
+    int continuar = 1;
+    while (continuar == 1 && productosRegistrados < limiteProductos) {
+        // Registrar producto
+        // Preguntar si desea continuar
+    }
+    
+    EXPLICACION: El ciclo tiene dos condiciones de salida:
+                 1. El usuario decide no continuar (continuar = 0)
+                 2. Se alcanza el limite de productos
+
+--- CICLO FOR ---
+
+USO 1: Algoritmo de ordenamiento burbuja
+    
+    for (int i = 0; i < productosRegistrados - 1; i++) {
+        for (int j = 0; j < productosRegistrados - i - 1; j++) {
+            // Comparar e intercambiar elementos
+        }
+    }
+    
+    EXPLICACION: Doble ciclo for anidado para ordenar los arrays.
+                 El ciclo externo controla las pasadas.
+                 El ciclo interno compara elementos adyacentes.
+
+USO 2: Generacion de rankings
+    
+    for (int i = 0; i < productosRegistrados; i++) {
+        // Construir cadena de ranking
+    }
+    
+    EXPLICACION: Recorre todos los productos registrados para
+                 generar la lista ordenada del ranking.
+
+USO 3: Copia de arrays para segundo ranking
+    
+    for (int i = 0; i < productosRegistrados; i++) {
+        nombresOrdenadosStock[i] = nombresProductos[i];
+        preciosOrdenadosStock[i] = preciosFinales[i];
+        stocksOrdenados[i] = stocksProductos[i];
+    }
+    
+    EXPLICACION: Copia los datos a nuevos arrays para poder
+                 ordenar por stock sin perder el orden por precio.
+
+================================================================================
+9. CONDICIONALES UTILIZADOS
+================================================================================
+
+El programa utiliza estructuras if-else para toma de decisiones:
+
+--- DETERMINACION DEL NOMBRE DEL DIA ---
+
+    if (diaOperacion == 1) {
+        nombreDia = "Lunes";
+    } else if (diaOperacion == 2) {
+        nombreDia = "Martes";
+    } else if (diaOperacion == 3) {
+        nombreDia = "Miercoles";
+    } else if (diaOperacion == 4) {
+        nombreDia = "Jueves";
+    } else if (diaOperacion == 5) {
+        nombreDia = "Viernes";
+    } else if (diaOperacion == 6) {
+        nombreDia = "Sabado";
+    } else if (diaOperacion == 7) {
+        nombreDia = "Domingo";
+    }
+    
+    PROPOSITO: Convierte el numero del dia a su nombre textual
+
+--- VERIFICACION DE TCE ---
+
+    if (diaOperacion == 6 || diaOperacion == 7) {
+        aplicaTCE = 1;
+    }
+    
+    PROPOSITO: Activa la bandera de TCE si es fin de semana
+    OPERADOR: || (OR logico) - basta que una condicion sea verdadera
+
+--- CALCULO DE IMPUESTOS CONDICIONALES ---
+
+    // IVA (exento para categoria 3)
+    if (categoria != 3) {
+        iva = precioBase * TASA_IVA;
+    } else {
+        iva = 0;
+    }
+    
+    // IRT (solo si hay riesgo tecnologico)
+    if (riesgo == 1) {
+        irt = precioBase * TASA_IRT;
+    } else {
+        irt = 0;
+    }
+    
+    // TCE (solo fin de semana)
+    if (aplicaTCE == 1) {
+        tce = precioBase * TASA_TCE;
+    } else {
+        tce = 0;
+    }
+
+--- INCREMENTO DE CONTADORES POR CATEGORIA ---
+
+    if (categoria == 1) {
+        contadorCat1 = contadorCat1 + 1;
+    } else if (categoria == 2) {
+        contadorCat2 = contadorCat2 + 1;
+    } else if (categoria == 3) {
+        contadorCat3 = contadorCat3 + 1;
+    } else if (categoria == 4) {
+        contadorCat4 = contadorCat4 + 1;
+    }
+
+--- ACTUALIZACION DEL MAYOR PRECIO ---
+
+    if (precioFinal > mayorPrecioFinal) {
+        mayorPrecioFinal = precioFinal;
+        nombreProductoMayorPrecio = nombreProducto;
+    }
+    
+    PROPOSITO: Mantiene registro del producto mas caro
+
+--- DETERMINACION DE CATEGORIA CON MAS PRODUCTOS ---
+
+    if (contadorCat1 >= contadorCat2 && contadorCat1 >= contadorCat3 
+        && contadorCat1 >= contadorCat4) {
+        categoriaMayorProductos = "Electronica personal";
+        maxProductosCategoria = contadorCat1;
+    } else if (contadorCat2 >= contadorCat1 && contadorCat2 >= contadorCat3 
+               && contadorCat2 >= contadorCat4) {
+        // ... y asi sucesivamente
+    }
+    
+    OPERADOR: && (AND logico) - todas las condiciones deben ser verdaderas
+
+--- POSICIONES DEL RANKING ---
+
+    if (i == 0) {
+        posicion = "1ro";
+    } else if (i == 1) {
+        posicion = "2do";
+    } else if (i == 2) {
+        posicion = "3ro";
+    } else {
+        posicion = (i + 1) + "to";
+    }
+    
+    PROPOSITO: Asigna el ordinal correcto (1ro, 2do, 3ro, 4to, etc.)
+
+================================================================================
+10. CALCULO DE IMPUESTOS
+================================================================================
+
+El calculo de impuestos se realiza para cada producto individual.
+
+FORMULAS MATEMATICAS:
+
+    IVA = precioBase × 0.12  (si categoria ≠ 3)
+    IVA = 0                  (si categoria = 3)
+    
+    IMC = precioBase × 0.015 (siempre)
+    
+    IRT = precioBase × 0.037 (si riesgo = 1)
+    IRT = 0                  (si riesgo = 0)
+    
+    TCE = precioBase × 0.02  (si dia = 6 o dia = 7)
+    TCE = 0                  (caso contrario)
+    
+    PRECIO FINAL = precioBase + IVA + IMC + IRT + TCE
+
+IMPLEMENTACION EN CODIGO:
+
+    float iva = 0;
+    float imc = 0;
+    float irt = 0;
+    float tce = 0;
+    float precioFinal = 0;
+    
+    // Calculo IVA
+    if (categoria != 3) {
+        iva = precioBase * TASA_IVA;
+    } else {
+        iva = 0;
+    }
+    
+    // Calculo IMC (siempre aplica)
+    imc = precioBase * TASA_IMC;
+    
+    // Calculo IRT
+    if (riesgo == 1) {
+        irt = precioBase * TASA_IRT;
+    } else {
+        irt = 0;
+    }
+    
+    // Calculo TCE
+    if (aplicaTCE == 1) {
+        tce = precioBase * TASA_TCE;
+    } else {
+        tce = 0;
+    }
+    
+    // Precio final
+    precioFinal = precioBase + iva + imc + irt + tce;
+
+ACUMULACION CONSIDERANDO STOCK:
+
+    totalIVA = totalIVA + (iva * stock);
+    totalIMC = totalIMC + (imc * stock);
+    totalIRT = totalIRT + (irt * stock);
+    totalTCE = totalTCE + (tce * stock);
+    montoTotalVentas = montoTotalVentas + (precioFinal * stock);
+    
+    EXPLICACION: Los totales se multiplican por el stock porque
+                 representan el valor total recaudado, no solo
+                 por unidad individual.
+
+================================================================================
+11. ALGORITMO DE ORDENAMIENTO (BURBUJA)
+================================================================================
+
+El programa implementa el algoritmo de ordenamiento burbuja (Bubble Sort)
+para ordenar los productos tanto por precio final como por stock.
+
+DESCRIPCION DEL ALGORITMO:
+El ordenamiento burbuja compara pares de elementos adyacentes e intercambia
+sus posiciones si estan en el orden incorrecto. Este proceso se repite
+hasta que no se necesiten mas intercambios.
+
+CARACTERISTICAS:
+- Tipo: Ordenamiento por intercambio
+- Complejidad: O(n²) en el peor caso
+- Estabilidad: Es un algoritmo estable
+- Uso: Ideal para conjuntos de datos pequeños o casi ordenados
+
+IMPLEMENTACION PARA ORDENAR POR PRECIO (DESCENDENTE):
+
+    for (int i = 0; i < productosRegistrados - 1; i++) {
+        for (int j = 0; j < productosRegistrados - i - 1; j++) {
+            if (preciosFinales[j] < preciosFinales[j + 1]) {
+                // Intercambiar precio
+                float tempPrecio = preciosFinales[j];
+                preciosFinales[j] = preciosFinales[j + 1];
+                preciosFinales[j + 1] = tempPrecio;
+                
+                // Intercambiar nombre (mantener correspondencia)
+                String tempNombre = nombresProductos[j];
+                nombresProductos[j] = nombresProductos[j + 1];
+                nombresProductos[j + 1] = tempNombre;
+                
+                // Intercambiar stock (mantener correspondencia)
+                int tempStock = stocksProductos[j];
+                stocksProductos[j] = stocksProductos[j + 1];
+                stocksProductos[j + 1] = tempStock;
+            }
+        }
+    }
+
+EXPLICACION PASO A PASO:
+
+    1. El ciclo externo (i) controla el numero de pasadas necesarias.
+       Se necesitan n-1 pasadas para ordenar n elementos.
+    
+    2. El ciclo interno (j) recorre los elementos no ordenados.
+       Con cada pasada, el elemento mas pequeño "burbujea" hacia el final.
+    
+    3. La condicion "preciosFinales[j] < preciosFinales[j + 1]" ordena
+       de MAYOR a MENOR (descendente).
+    
+    4. Cuando se intercambia un precio, tambien se intercambian
+       el nombre y el stock correspondientes para mantener la
+       asociacion correcta entre los datos del mismo producto.
+    
+    5. Las variables temporales (tempPrecio, tempNombre, tempStock)
+       son necesarias para realizar el intercambio sin perder datos.
+
+POR QUE SE CREA UNA COPIA PARA EL SEGUNDO RANKING:
+
+    String[] nombresOrdenadosStock = new String[productosRegistrados];
+    float[] preciosOrdenadosStock = new float[productosRegistrados];
+    int[] stocksOrdenados = new int[productosRegistrados];
+    
+    for (int i = 0; i < productosRegistrados; i++) {
+        nombresOrdenadosStock[i] = nombresProductos[i];
+        preciosOrdenadosStock[i] = preciosFinales[i];
+        stocksOrdenados[i] = stocksProductos[i];
+    }
+    
+    RAZON: Los arrays originales ya fueron ordenados por precio.
+           Para generar un segundo ranking por stock sin perder
+           el ordenamiento por precio, se crean copias de los arrays
+           y se ordenan independientemente.
+
+================================================================================
+12. METODOS DE JOPTIONPANE UTILIZADOS
+================================================================================
+
+--- showMessageDialog ---
+
+SINTAXIS:
+    JOptionPane.showMessageDialog(
+        Component parentComponent,    // Componente padre (null = centrado)
+        Object message,               // Mensaje a mostrar
+        String title,                 // Titulo de la ventana
+        int messageType               // Tipo de icono
+    );
+
+TIPOS DE MENSAJE:
+    JOptionPane.INFORMATION_MESSAGE  - Icono de informacion (i)
+    JOptionPane.WARNING_MESSAGE      - Icono de advertencia (!)
+    JOptionPane.ERROR_MESSAGE        - Icono de error (X)
+
+EJEMPLOS DE USO EN EL PROGRAMA:
+
+    // Mensaje de bienvenida
+    JOptionPane.showMessageDialog(null, 
+        "SISTEMA DE GESTION DE INVENTARIO...",
+        "TecnoLogix Global",
+        JOptionPane.INFORMATION_MESSAGE);
+    
+    // Mensaje de error
+    JOptionPane.showMessageDialog(null, 
+        "Error: El precio debe ser mayor a 0.",
+        "Error de Validacion",
+        JOptionPane.ERROR_MESSAGE);
+    
+    // Mensaje de advertencia
+    JOptionPane.showMessageDialog(null,
+        "Se aplicara Tasa de Control Especial (TCE)...",
+        "Tasa Especial Activada",
+        JOptionPane.WARNING_MESSAGE);
+
+-------------------------------------------------------------------------
+
+--- showInputDialog ---
+
+SINTAXIS:
+    String resultado = JOptionPane.showInputDialog(
+        Component parentComponent,    // Componente padre
+        Object message,               // Mensaje/pregunta
+        String title,                 // Titulo
+        int messageType               // Tipo de icono
+    );
+
+VALOR DE RETORNO:
+    - String con el texto ingresado si el usuario presiona OK
+    - null si el usuario presiona Cancelar o cierra la ventana
+
+EJEMPLOS DE USO EN EL PROGRAMA:
+
+    // Solicitar limite de productos
+    String inputLimite = JOptionPane.showInputDialog(null,
+        "Ingrese el limite maximo de productos a registrar:",
+        "Configuracion Inicial",
+        JOptionPane.QUESTION_MESSAGE);
+    
+    // Solicitar nombre del producto
+    nombreProducto = JOptionPane.showInputDialog(null,
+        "PRODUCTO #" + (productosRegistrados + 1) + "\n\n" +
+        "Ingrese el nombre del producto:",
+        "Registro de Producto",
+        JOptionPane.QUESTION_MESSAGE);
+
+-------------------------------------------------------------------------
+
+--- showConfirmDialog ---
+
+SINTAXIS:
+    int respuesta = JOptionPane.showConfirmDialog(
+        Component parentComponent,
+        Object message,
+        String title,
+        int optionType,               // Tipo de botones
+        int messageType               // Tipo de icono
+    );
+
+TIPOS DE OPCIONES:
+    JOptionPane.YES_NO_OPTION        - Botones Si/No
+    JOptionPane.YES_NO_CANCEL_OPTION - Botones Si/No/Cancelar
+    JOptionPane.OK_CANCEL_OPTION     - Botones OK/Cancelar
+
+VALORES DE RETORNO:
+    JOptionPane.YES_OPTION    - El usuario presiono Si
+    JOptionPane.NO_OPTION     - El usuario presiono No
+    JOptionPane.CANCEL_OPTION - El usuario presiono Cancelar
+
+EJEMPLO DE USO EN EL PROGRAMA:
+
+    int respuesta = JOptionPane.showConfirmDialog(null,
+        "Productos registrados: " + productosRegistrados + 
+        " de " + limiteProductos + "\n\n" +
+        "Desea registrar otro producto?",
+        "Continuar Registro",
+        JOptionPane.YES_NO_OPTION,
+        JOptionPane.QUESTION_MESSAGE);
+    
+    if (respuesta == JOptionPane.YES_OPTION) {
+        continuar = 1;
+    } else {
+        continuar = 0;
+    }
+
+================================================================================
+13. FLUJO COMPLETO DEL PROGRAMA
+================================================================================
+
+A continuacion se describe el flujo de ejecucion paso a paso:
+
+INICIO DEL PROGRAMA
+       |
+       v
+[1] Declaracion de variables y constantes
+       |
+       v
+[2] Mensaje de bienvenida (showMessageDialog)
+       |
+       v
+[3] Solicitar limite de productos
+       |
+       +---> Validar entrada
+       |        |
+       |        +---> Si es invalido: mostrar error, repetir
+       |        |
+       |        +---> Si es valido: continuar
+       v
+[4] Solicitar dia de operacion (1-7)
+       |
+       +---> Validar entrada
+       |        |
+       |        +---> Si es invalido: mostrar error, repetir
+       |        |
+       |        +---> Si es valido: continuar
+       v
+[5] Determinar si aplica TCE (dia 6 o 7)
+       |
+       v
+[6] Mostrar resumen de configuracion
+       |
+       v
+[7] INICIO DEL CICLO PRINCIPAL DE REGISTRO
+       |
+       +===================================+
+       |                                   |
+       v                                   |
+   [7.1] Solicitar nombre del producto     |
+       |                                   |
+       v                                   |
+   [7.2] Solicitar y validar precio base   |
+       |                                   |
+       v                                   |
+   [7.3] Solicitar y validar categoria     |
+       |                                   |
+       v                                   |
+   [7.4] Solicitar y validar riesgo        |
+       |                                   |
+       v                                   |
+   [7.5] Solicitar y validar stock         |
+       |                                   |
+       v                                   |
+   [7.6] Calcular impuestos                |
+       |     - IVA (si categoria != 3)     |
+       |     - IMC (siempre)               |
+       |     - IRT (si riesgo = 1)         |
+       |     - TCE (si dia = 6 o 7)        |
+       |     - Precio final                |
+       |                                   |
+       v                                   |
+   [7.7] Acumular totales                  |
+       |     (multiplicando por stock)     |
+       |                                   |
+       v                                   |
+   [7.8] Incrementar contador de categoria |
+       |                                   |
+       v                                   |
+   [7.9] Verificar si es el mayor precio   |
+       |                                   |
+       v                                   |
+   [7.10] Guardar en arrays para ranking   |
+       |                                   |
+       v                                   |
+   [7.11] Incrementar productosRegistrados |
+       |                                   |
+       v                                   |
+   [7.12] Mostrar reporte del producto     |
+       |                                   |
+       v                                   |
+   [7.13] Verificar limite alcanzado?      |
+       |     |                             |
+       |     +---> Si: terminar ciclo      |
+       |     |                             |
+       |     +---> No: preguntar continuar |
+       |               |                   |
+       |               +---> Si: repetir --+
+       |               |
+       |               +---> No: salir del ciclo
+       v
+[8] Determinar categoria con mas productos
+       |
+       v
+[9] Ordenar productos por precio (burbuja)
+       |
+       v
+[10] MOSTRAR REPORTE FINAL
+       |
+       +---> [10.1] Resumen financiero
+       |            - Total productos
+       |            - Desglose impuestos
+       |            - Monto total ventas
+       |
+       +---> [10.2] Estadisticas
+       |            - Productos por categoria
+       |            - Categoria con mas productos
+       |            - Producto con mayor precio
+       |
+       +---> [10.3] Ranking por precio final
+       |
+       +---> [10.4] Copiar arrays para stock
+       |
+       +---> [10.5] Ordenar por stock (burbuja)
+       |
+       +---> [10.6] Ranking por stock
+       |
+       v
+[11] Mensaje de despedida
+       |
+       v
+      FIN
+
+================================================================================
+14. REPORTES GENERADOS
+================================================================================
+
+--- REPORTE INDIVIDUAL POR PRODUCTO ---
+
+Se muestra inmediatamente despues de registrar cada producto.
+Contenido:
+    - Numero de producto
+    - Nombre del producto
+    - Categoria (nombre completo)
+    - Stock ingresado
+    - Estado de riesgo tecnologico
+    - Desglose de impuestos:
+        * Precio base
+        * IVA (o "Exento" si categoria 3)
+        * IMC
+        * IRT (o "No aplica" si riesgo = 0)
+        * TCE (o "No aplica" si no es fin de semana)
+    - Precio final unitario
+    - Total multiplicado por stock
+
+--- REPORTE FINAL PARTE 1: RESUMEN FINANCIERO ---
+
+Contenido:
+    - Dia de operacion
+    - Total de productos registrados
+    - Desglose de impuestos recaudados:
+        * Total IVA
+        * Total IMC
+        * Total IRT
+        * Total TCE
+        * Suma total de impuestos
+    - Monto total acumulado de ventas
+
+--- REPORTE FINAL PARTE 2: ESTADISTICAS ---
+
+Contenido:
+    - Cantidad de productos por cada categoria:
+        * Electronica personal
+        * Componentes de computo
+        * Accesorios
+        * Redes y telecomunicaciones
+    - Categoria con mayor numero de productos
+    - Producto con mayor precio final (nombre y precio)
+
+--- REPORTE FINAL PARTE 3: RANKING POR PRECIO ---
+
+Contenido:
+    - Lista ordenada de productos de mayor a menor precio
+    - Para cada producto:
+        * Posicion (1ro, 2do, 3ro, etc.)
+        * Nombre del producto
+        * Precio final
+        * Stock
+
+--- REPORTE FINAL PARTE 4: RANKING POR STOCK ---
+
+Contenido:
+    - Lista ordenada de productos de mayor a menor stock
+    - Para cada producto:
+        * Posicion (1ro, 2do, 3ro, etc.)
+        * Nombre del producto
+        * Cantidad de stock
+        * Precio final
+
+--- MENSAJE DE DESPEDIDA ---
+
+Contenido:
+    - Agradecimiento
+    - Resumen final:
+        * Dia procesado
+        * Total de productos
+        * Ventas totales
+
+================================================================================
+15. FORMATO DE SALIDA
+================================================================================
+
+--- FORMATO DE NUMEROS DECIMALES ---
+
+Se utiliza String.format() para dar formato a los valores monetarios:
+
+    String.format("%.2f", valor)
+    
+    EXPLICACION:
+    - %.2f indica que el valor es un float con 2 decimales
+    - Ejemplo: 125.5 se muestra como "125.50"
+
+EJEMPLOS DE USO:
+
+    "Precio: $" + String.format("%.2f", precioBase)
+    "IVA (12%): $" + String.format("%.2f", iva)
+    "TOTAL: $" + String.format("%.2f", montoTotalVentas)
+
+--- CONSTRUCCION DE CADENAS MULTILLINEA ---
+
+Se utiliza concatenacion con "\n" para crear mensajes con multiples lineas:
+
+    String mensaje = 
+        "Linea 1\n" +
+        "Linea 2\n" +
+        "Linea 3";
+
+--- OPERADOR TERNARIO PARA TEXTO CONDICIONAL ---
+
+Se utiliza el operador ternario (? :) para mostrar texto segun condiciones:
+
+    (riesgo == 1 ? "Si" : "No")
+    
+    EXPLICACION:
+    - Si riesgo es 1, muestra "Si"
+    - Si riesgo es 0, muestra "No"
+
+OTROS EJEMPLOS:
+
+    (aplicaTCE == 1 ? "Si (2%)" : "No")
+    (categoria == 3 ? " (Exento)" : "")
+    (riesgo == 0 ? " (No aplica)" : "")
+
+--- SEPARADORES VISUALES ---
+
+Se utilizan lineas de caracteres para organizar visualmente la informacion:
+
+    "================================================"
+    "------------------------------------------------"
+    "========================================\n"
+
+================================================================================
+                         FIN DE LA DOCUMENTACION
+================================================================================
+
+ELABORADO PARA: Practica de Programacion
+PROYECTO: Sistema de Gestion de Inventario Avanzado - TecnoLogix Global
+VERSION: Interfaz Grafica con JOptionPane
+LENGUAJE: Java (Programacion Basica)
+TIPOS DE DATOS: int, float, String, arrays
+
+FUNCIONALIDADES CUBIERTAS:
+[X] Configuracion inicial del dia
+[X] Registro de productos con validaciones
+[X] Calculo de impuestos (IVA, IMC, IRT, TCE)
+[X] Reporte individual por producto
+[X] Reporte final del dia
+[X] Desafio Extra 1: Ranking de productos
+[X] Desafio Extra 2: Interfaz grafica con JOptionPane
+
+================================================================================
